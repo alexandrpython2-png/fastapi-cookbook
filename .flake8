@@ -1,0 +1,9 @@
+[flake8]
+# Та же длина строки, что у black, иначе flake8 ругается на строки, которые black считает правильными
+max-line-length = 120
+# Правила, с которыми black не согласен:
+# E203 — black ставит пробел перед двоеточием в срезах вида items[start : end];
+# E701, E704 — black записывает заглушки вида `def f(): ...` в одну строку.
+# W503 и W504 о переносе строки рядом с оператором выключены в flake8 по умолчанию, extend-ignore их не включает
+extend-ignore = E203, E701, E704
+exclude = .git, .venv, venv, __pycache__, .mypy_cache, .pytest_cache

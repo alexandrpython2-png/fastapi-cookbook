@@ -1,6 +1,7 @@
 """
 Запросы к рецептам
 """
+
 from typing import Annotated, List, Sequence
 
 from fastapi import APIRouter, HTTPException, Path, status
@@ -10,16 +11,16 @@ from sqlalchemy.orm import selectinload
 from cookbook import models, schemas
 from cookbook.database import SessionDep
 
-MAX_ID: int = 2 ** 63 - 1  # наибольшее число, которое помещается в INTEGER базы
+MAX_ID: int = 2**63 - 1  # наибольшее число, которое помещается в INTEGER базы
 
-router = APIRouter(prefix='/recipes', tags=['recipes'])
+router = APIRouter(prefix="/recipes", tags=["recipes"])
 
 
 @router.get(
-    '',
+    "",
     response_model=List[schemas.RecipeShort],
-    summary='Список рецептов',
-    response_description='Все рецепты, от самых популярных к наименее популярным',
+    summary="Список рецептов",
+    response_description="Все рецепты, от самых популярных к наименее популярным",
 )
 async def list_recipes(session: SessionDep) -> Sequence[models.Recipe]:
     """
@@ -37,14 +38,14 @@ async def list_recipes(session: SessionDep) -> Sequence[models.Recipe]:
 
 
 @router.get(
-    '/{recipe_id}',
+    "/{recipe_id}",
     response_model=schemas.RecipeDetail,
-    summary='Детальная информация о рецепте',
-    response_description='Рецепт с ингредиентами и описанием',
-    responses={status.HTTP_404_NOT_FOUND: {'model': schemas.HTTPError, 'description': 'Рецепта с таким id нет'}},
+    summary="Детальная информация о рецепте",
+    response_description="Рецепт с ингредиентами и описанием",
+    responses={status.HTTP_404_NOT_FOUND: {"model": schemas.HTTPError, "description": "Рецепта с таким id нет"}},
 )
 async def get_recipe(
-    recipe_id: Annotated[int, Path(ge=1, le=MAX_ID, description='Идентификатор рецепта из списка рецептов')],
+    recipe_id: Annotated[int, Path(ge=1, le=MAX_ID, description="Идентификатор рецепта из списка рецептов")],
     session: SessionDep,
 ) -> models.Recipe:
     """
@@ -54,27 +55,30 @@ async def get_recipe(
     и рецепт поднимается в списке. Запрос несуществующего рецепта просмотром не считается.
     """
     # Счётчик увеличивает сама база одним UPDATE, поэтому при одновременных просмотрах ни один не потеряется
-    result = await session.execute(
+    # RETURNING сразу показывает, нашёлся ли рецепт: если нет, UPDATE не вернёт ни одной строки
+    updated_id = await session.scalar(
         update(models.Recipe)
         .where(models.Recipe.id == recipe_id)
         .values(views=models.Recipe.views + 1)
+        .returning(models.Recipe.id)
         .execution_options(synchronize_session=False)
     )
-    if result.rowcount == 0:
-        raise HTTPException(status.HTTP_404_NOT_FOUND, 'Рецепт не найден')
-    recipe: models.Recipe = await session.scalar(
+    if updated_id is None:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "Рецепт не найден")
+    recipes = await session.scalars(
         select(models.Recipe).options(selectinload(models.Recipe.ingredients)).where(models.Recipe.id == recipe_id)
     )
+    recipe = recipes.one()
     await session.commit()
     return recipe
 
 
 @router.post(
-    '',
+    "",
     response_model=schemas.RecipeDetail,
     status_code=status.HTTP_201_CREATED,
-    summary='Добавить рецепт',
-    response_description='Созданный рецепт вместе с его id',
+    summary="Добавить рецепт",
+    response_description="Созданный рецепт вместе с его id",
 )
 async def create_recipe(recipe_in: schemas.RecipeCreate, session: SessionDep) -> models.Recipe:
     """

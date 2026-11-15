@@ -1,5 +1,7 @@
 # Кулинарная книга
 
+[![CI](https://github.com/alexandrpython2-png/fastapi-cookbook/actions/workflows/ci.yml/badge.svg)](https://github.com/alexandrpython2-png/fastapi-cookbook/actions/workflows/ci.yml)
+
 Асинхронный API кулинарной книги на FastAPI и асинхронной SQLAlchemy с базой SQLite (драйвер aiosqlite).
 
 ```shell
@@ -41,11 +43,38 @@ uvicorn cookbook.main:app --reload
   приложение читало значение и записывало его обратно, одновременные просмотры терялись бы.
 - Ингредиенты хранятся в отдельной таблице и возвращаются в том порядке, в котором их добавили.
 
-## Тесты
+## Тесты и линтеры
 
 ```shell
-pytest
+pip install -r requirements-dev.txt
+pytest --cov          # тесты и покрытие кода
+flake8 .              # стиль и типичные ошибки
+isort --check-only .  # порядок импортов
+black --check .       # форматирование
+mypy .                # типы в строгом режиме
+bandit -r cookbook    # типичные уязвимости
 ```
 
 Тесты в [tests/test_recipes.py](tests/test_recipes.py) запускают приложение на временной базе и проверяют все
 запросы, сортировку, подсчёт просмотров, ответы на неверные данные, одновременные просмотры и документацию.
+Покрытие кода тестами должно быть не меньше 95%, иначе `pytest --cov` завершается с ошибкой.
+
+Настройки black, isort, mypy, pytest и coverage лежат в [pyproject.toml](pyproject.toml), настройки flake8 — в
+[.flake8](.flake8): flake8 не читает pyproject.toml.
+
+- **black и flake8.** По умолчанию black переносит строки длиннее 88 символов, а flake8 требует не больше 79.
+  Поэтому у обоих задана одна длина — 120. Кроме того, black оформляет срезы как `items[start : end]` и записывает
+  заглушки `def f(): ...` в одну строку, а flake8 считает это ошибками E203, E701 и E704. Эти три правила выключены.
+- **isort и black.** С настройками по умолчанию isort переносит длинные импорты иначе, чем black. Профиль
+  `profile = "black"` оформляет импорты так же, как black.
+- **mypy** работает в строгом режиме (`strict = true`) с плагином pydantic, который проверяет создание схем.
+
+## CI
+
+[GitHub Actions](.github/workflows/ci.yml) запускает проверки на каждый пуш в любую ветку и на каждый pull request:
+
+- `lint` — flake8, isort, black, mypy и bandit. Линтер запускается, даже если предыдущий нашёл ошибки, поэтому
+  в одном прогоне видны сразу все проблемы;
+- `test` — тесты с проверкой покрытия на Python 3.11, 3.12 и 3.13.
+
+Ветка `main` защищена: pull request в неё можно слить, только когда все проверки прошли.
