@@ -1,5 +1,7 @@
 # Кулинарная книга
 
+[![CI](https://github.com/alexandrpython2-png/fastapi-cookbook/actions/workflows/ci.yml/badge.svg)](https://github.com/alexandrpython2-png/fastapi-cookbook/actions/workflows/ci.yml)
+
 Асинхронный API кулинарной книги на FastAPI и асинхронной SQLAlchemy с базой SQLite (драйвер aiosqlite).
 
 ```shell
@@ -66,3 +68,13 @@ bandit -r cookbook    # типичные уязвимости
 - **isort и black.** С настройками по умолчанию isort переносит длинные импорты иначе, чем black. Профиль
   `profile = "black"` оформляет импорты так же, как black.
 - **mypy** работает в строгом режиме (`strict = true`) с плагином pydantic, который проверяет создание схем.
+
+## CI
+
+[GitHub Actions](.github/workflows/ci.yml) запускает проверки на каждый пуш в любую ветку и на каждый pull request:
+
+- `lint` — flake8, isort, black, mypy и bandit. Линтер запускается, даже если предыдущий нашёл ошибки, поэтому
+  в одном прогоне видны сразу все проблемы;
+- `test` — тесты с проверкой покрытия на Python 3.11, 3.12 и 3.13.
+
+Ветка `main` защищена: pull request в неё можно слить, только когда все проверки прошли.
