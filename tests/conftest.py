@@ -29,4 +29,4 @@ def client(app: FastAPI) -> Iterator[TestClient]:
 
 @pytest.fixture
 def anyio_backend() -> str:
-    return 'asyncio'
+    return "asyncio"

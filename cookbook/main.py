@@ -3,6 +3,7 @@ API кулинарной книги
 
 uvicorn cookbook.main:app --reload
 """
+
 from contextlib import asynccontextmanager
 from typing import AsyncIterator
 
@@ -44,7 +45,7 @@ DESCRIPTION: str = """
   (например, `["body", "cooking_time"]`), `msg` — что не так.
 """
 
-TAGS = [{'name': 'recipes', 'description': 'Рецепты: список, детальная информация и добавление'}]
+TAGS = [{"name": "recipes", "description": "Рецепты: список, детальная информация и добавление"}]
 
 
 def create_app(database_url: str = DATABASE_URL) -> FastAPI:
@@ -61,8 +62,8 @@ def create_app(database_url: str = DATABASE_URL) -> FastAPI:
         await engine.dispose()
 
     app = FastAPI(
-        title='Кулинарная книга',
-        version='1.0.0',
+        title="Кулинарная книга",
+        version="1.0.0",
         description=DESCRIPTION,
         openapi_tags=TAGS,
         lifespan=lifespan,
@@ -74,9 +75,9 @@ def create_app(database_url: str = DATABASE_URL) -> FastAPI:
     app.state.session_maker = async_sessionmaker(engine, expire_on_commit=False)
     app.include_router(router)
 
-    @app.get('/', include_in_schema=False)
+    @app.get("/", include_in_schema=False)
     async def index() -> RedirectResponse:
-        return RedirectResponse('/docs')
+        return RedirectResponse("/docs")
 
     return app
 

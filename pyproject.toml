@@ -1,0 +1,32 @@
+[tool.black]
+line-length = 120
+target-version = ["py311"]
+
+[tool.isort]
+profile = "black"  # сортирует и переносит импорты так же, как их оформил бы black
+line_length = 120
+
+[tool.mypy]
+python_version = "3.11"
+strict = true
+plugins = ["pydantic.mypy"]
+
+[tool.pydantic-mypy]
+init_forbid_extra = true
+init_typed = true
+warn_required_dynamic_aliases = true
+
+[tool.pytest.ini_options]
+pythonpath = ["."]
+testpaths = ["tests"]
+
+[tool.coverage.run]
+source = ["cookbook"]
+branch = true
+# Асинхронная SQLAlchemy выполняет запросы в greenlet'ах, а TestClient запускает приложение в отдельном потоке:
+# без этой настройки coverage теряет строки роутов после await
+concurrency = ["greenlet", "thread"]
+
+[tool.coverage.report]
+fail_under = 95
+show_missing = true
